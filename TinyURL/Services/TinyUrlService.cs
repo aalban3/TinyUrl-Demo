@@ -46,9 +46,10 @@ public class TinyUrlService: ITinyUrlService
 
         #region Generate unique link ID an save entity
         var urlId = Nanoid.Generate(size:9);
-        var shortUrl = $"http://tiny.test/{urlId}";
+        var shortUrl = $"http://tiny.url/{urlId}";
         var entityToCreate = new UrlEntity
         {
+            Id = urlId,
             OriginalUrl = originalUrl,
             ShortUrl = shortUrl
         };
@@ -60,22 +61,25 @@ public class TinyUrlService: ITinyUrlService
 
     public void Save(string originalUrl, string customUrl)
     {
-        #region Check if item exists
+        # region Check if item exists
         var query = _collection.AsQueryable().FirstOrDefault(x => x.ShortUrl == originalUrl);
         if (query != null)
             Console.WriteLine("\nUrl Already Exists");
-        # endregion
+        #endregion
 
-        var shortUrl = $"http://tiny.test/{customUrl}";
+        # region Generate unique link ID an save entity
+        var urlId = Nanoid.Generate(size: 9); ;
         var entityToCreate = new UrlEntity
         {
+            Id = urlId,
             OriginalUrl = originalUrl,
             ShortUrl = customUrl
         };
 
         _collection.InsertOne(entityToCreate);
+        # endregion
 
-        Console.WriteLine($"\n{shortUrl}");
+        Console.WriteLine($"\n{customUrl}");
     }
 
     public void GetClickCount(string shortUrl)
@@ -89,7 +93,7 @@ public class TinyUrlService: ITinyUrlService
         }
         #endregion
 
-        Console.WriteLine($"\nURL has been used: {result.NumberOfClicks} times");
+        Console.WriteLine($"\nURL has been used: {result.Clicks} times");
     }
 
     public void Delete(string originalUrl)
@@ -98,5 +102,3 @@ public class TinyUrlService: ITinyUrlService
     }
 
 }
-
-
