@@ -48,16 +48,17 @@ public class TinyUrlService: ITinyUrlService
         #endregion
 
         #region Generate unique link ID an save entity
-        string urlId = _nanoIdService.GetNewId();
+        var urlId = _nanoIdService.GetNewId();
         var shortUrl = $"http://tiny.url/{urlId}";
-        var entityToCreate = new UrlEntity
+
+        var newEntity = new UrlEntity
         {
             Id = urlId,
             OriginalUrl = originalUrl,
             ShortUrl = shortUrl
         };
 
-        var result = _collection.InsertOne(entityToCreate);
+        var result = _collection.InsertOne(newEntity);
         #endregion
 
         Console.WriteLine($"\n{shortUrl}");
@@ -72,15 +73,15 @@ public class TinyUrlService: ITinyUrlService
         #endregion
 
         # region Generate unique link ID an save entity
-        var urlId = Nanoid.Generate(size: 9);
-        var entityToCreate = new UrlEntity
+        var urlId = _nanoIdService.GetNewId();
+        var newEntity = new UrlEntity
         {
             Id = urlId,
             OriginalUrl = originalUrl,
             ShortUrl = customUrl
         };
 
-        _collection.InsertOne(entityToCreate);
+        _collection.InsertOne(newEntity);
         # endregion
 
         Console.WriteLine($"\n{customUrl}");

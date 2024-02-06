@@ -7,7 +7,7 @@ var keepOpen = true;
 
 while (keepOpen == true)
 {
-    // Ask the user to choose an option.
+    // This is our UI.
     Console.WriteLine("Available actions:");
     Console.WriteLine("\tcreate <url_string>");
     Console.WriteLine("\tcreate <url_string> <custom_url_string>");
@@ -15,8 +15,8 @@ while (keepOpen == true)
     Console.WriteLine("\tfetch <url_string>");
     Console.WriteLine("\tfetch_clicks <url_string>\n");
     Console.WriteLine("Enter \"exit\" to quit.");
-
     Console.Write(": ");
+
     var input = Console.ReadLine();
 
     if (string.IsNullOrEmpty(input))
@@ -27,27 +27,27 @@ while (keepOpen == true)
 
     var inputArgs = input.Split(' ');
     var command = inputArgs[0];
-    var urlArgs = inputArgs?.Skip(1).ToArray() ?? Array.Empty<string>();
+    var urlArgs = inputArgs.Length > 1 ? inputArgs.Skip(1).ToArray() : Array.Empty<string>();
 
     switch (command)
     {
         case "create":
-            if (urlArgs!.Length == 2)
+            if (urlArgs.Length == 2)
                 service.Save(urlArgs[0], urlArgs[1]);
             else
                 service.Save(urlArgs[0]);
             break;
 
         case "delete":
-            service.Delete(urlArgs![0]);
+            service.Delete(urlArgs[0]);
             break;
 
         case "fetch":
-            service.Get(urlArgs![0]);
+            service.Get(urlArgs[0]);
             break;
 
-        case "fetch_clicks":
-            service.GetClickCount(urlArgs![0]);
+        case "fetch-clicks":
+            service.GetClickCount(urlArgs[0]);
             break;
 
         case "exit":
@@ -60,7 +60,7 @@ while (keepOpen == true)
             break;
     }
 
-    Console.WriteLine("\n\n");
+    Console.WriteLine("\n");
 }
 
 // This line can be uncommented if we want the store to clear on close
