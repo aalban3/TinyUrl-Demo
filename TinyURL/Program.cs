@@ -14,7 +14,7 @@ while (keepOpen == true)
     Console.WriteLine("\tdelete <url_string>");
     Console.WriteLine("\tfetch <url_string>");
     Console.WriteLine("\tfetch_clicks <url_string>\n");
-    Console.WriteLine("Enter \"exit\" to quit.");
+    Console.WriteLine("Enter \"clear\" to clear screen or \"exit\" to quit.");
     Console.Write(": ");
 
     var input = Console.ReadLine();
@@ -53,6 +53,10 @@ while (keepOpen == true)
         case "exit":
             Console.WriteLine("Closing Application!");
             keepOpen = false;
+            break;
+
+        case "clear":
+            Console.Clear();
             break;
 
         default:

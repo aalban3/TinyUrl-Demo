@@ -1,5 +1,4 @@
 ﻿using JsonFlatFileDataStore;
-using NanoidDotNet;
 using TinyURL.Interfaces;
 using TinyURL.Models;
 
@@ -9,13 +8,13 @@ public class TinyUrlService: ITinyUrlService
 {
     private readonly IDataStore _urlDataStore;
     private readonly IDocumentCollection<UrlEntity> _collection;
-    private readonly INanoIdService _nanoIdService;
+    private readonly IHashingService _hashingService;
 
     public TinyUrlService(IDataStore urlDataStore)
 	{
         _urlDataStore = urlDataStore;
-        _nanoIdService = new NanoIdService(_urlDataStore);
         _collection = _urlDataStore.GetCollection<UrlEntity>("url");
+        _hashingService = new HashingService();
     }
 
     public void Get(string shortUrl)
@@ -24,7 +23,7 @@ public class TinyUrlService: ITinyUrlService
         var result = _collection.AsQueryable().FirstOrDefault(x => x.ShortUrl == shortUrl);
         if (result == null)
         {
-            Console.WriteLine("\nNo URL found.");
+            Console.WriteLine("\nUrl not found.");
             return;
         }
         #endregion
@@ -34,13 +33,13 @@ public class TinyUrlService: ITinyUrlService
         _collection.UpdateOne(x => x.Id == result.Id, result);
         # endregion
 
-        Console.WriteLine($"Original URL: {result.OriginalUrl}");
+        Console.WriteLine($"\nOriginal URL: {result.OriginalUrl}");
     }
 
     public void Save(string originalUrl)
     {
-        #region Check if URL is valid
-        if(!Uri.IsWellFormedUriString(originalUrl, UriKind.RelativeOrAbsolute))
+        #region Check if URL format is valid
+        if (!Uri.IsWellFormedUriString(originalUrl, UriKind.RelativeOrAbsolute))
         {
             Console.WriteLine("\nCannot general Short URL from invalid URL");
             return;
@@ -48,35 +47,41 @@ public class TinyUrlService: ITinyUrlService
         #endregion
 
         #region Generate unique link ID an save entity
-        var urlId = _nanoIdService.GetNewId();
-        var shortUrl = $"http://tiny.url/{urlId}";
+        var nextId = _collection.GetNextIdValue();
+        var urlHash = _hashingService.GetHash(nextId);
+        var shortUrl = $"http://aa.tinyurl/{urlHash}";
 
         var newEntity = new UrlEntity
         {
-            Id = urlId,
             OriginalUrl = originalUrl,
             ShortUrl = shortUrl
         };
 
-        var result = _collection.InsertOne(newEntity);
+        _collection.InsertOne(newEntity);
         #endregion
 
-        Console.WriteLine($"\n{shortUrl}");
+        Console.WriteLine($"\nYour URL: {shortUrl}");
     }
 
     public void Save(string originalUrl, string customUrl)
     {
-        # region Check if item exists
-        var query = _collection.AsQueryable().FirstOrDefault(x => x.ShortUrl == originalUrl);
-        if (query != null)
-            Console.WriteLine("\nUrl Already Exists");
+        #region Check if URL format is valid
+        if (!Uri.IsWellFormedUriString(originalUrl, UriKind.RelativeOrAbsolute))
+        {
+            Console.WriteLine("\nCannot general Short URL from invalid URL");
+            return;
+        }
         #endregion
 
-        # region Generate unique link ID an save entity
-        var urlId = _nanoIdService.GetNewId();
+        # region Check if custom item exists
+        var query = _collection.AsQueryable().FirstOrDefault(x => x.ShortUrl == customUrl);
+        if (query != null)
+            Console.WriteLine("\nUrl combination already exists.");
+        #endregion
+
+        #region Generate unique link ID an save entity
         var newEntity = new UrlEntity
         {
-            Id = urlId,
             OriginalUrl = originalUrl,
             ShortUrl = customUrl
         };
@@ -84,7 +89,7 @@ public class TinyUrlService: ITinyUrlService
         _collection.InsertOne(newEntity);
         # endregion
 
-        Console.WriteLine($"\n{customUrl}");
+        Console.WriteLine($"\nYour URL: {customUrl}");
     }
 
     public void GetClickCount(string shortUrl)
@@ -93,7 +98,7 @@ public class TinyUrlService: ITinyUrlService
         var result = _collection.AsQueryable().FirstOrDefault(x => x.ShortUrl == shortUrl);
         if (result == null)
         {
-            Console.WriteLine("\nNo URL found.");
+            Console.WriteLine("\nUrl not found.");
             return;
         }
         #endregion
@@ -101,9 +106,22 @@ public class TinyUrlService: ITinyUrlService
         Console.WriteLine($"\nURL has been used: {result.Clicks} times");
     }
 
-    public void Delete(string originalUrl)
+    public void Delete(string shortUrl)
     {
-        throw new NotImplementedException();
+        #region Fetch Item and handle null case
+        var result = _collection.AsQueryable().FirstOrDefault(x => x.ShortUrl == shortUrl);
+        if (result == null)
+        {
+            Console.WriteLine("\nUrl not found.");
+            return;
+        }
+        #endregion
+
+        #region Handle Deletion
+        _collection.DeleteOne(x => x.ShortUrl == shortUrl);
+        #endregion
+
+        Console.WriteLine($"\nThe URL {shortUrl} has been removed.");
     }
 
 }

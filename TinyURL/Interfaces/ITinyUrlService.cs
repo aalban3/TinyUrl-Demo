@@ -6,5 +6,5 @@ public interface ITinyUrlService
     void Save(string originalUrl);
     void Save(string originalUrl, string customUrl);
     void GetClickCount(string shortUrl);
-    void Delete(string originalUrl);
+    void Delete(string shortUrl);
 }

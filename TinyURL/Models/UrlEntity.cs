@@ -2,7 +2,7 @@
 
 public class UrlEntity
 {
-    public required string Id { get; init; }
+    public long Id { get; init; }
     public string ShortUrl { get; set; } = string.Empty;
     public string OriginalUrl { get; set; } = string.Empty;
     public long Clicks { get; set; }
