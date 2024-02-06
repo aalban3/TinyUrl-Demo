@@ -1,5 +1,4 @@
-﻿using System;
-using JsonFlatFileDataStore;
+﻿using JsonFlatFileDataStore;
 using NanoidDotNet;
 using TinyURL.Interfaces;
 using TinyURL.Models;
@@ -10,10 +9,12 @@ public class TinyUrlService: ITinyUrlService
 {
     private readonly IDataStore _urlDataStore;
     private readonly IDocumentCollection<UrlEntity> _collection;
+    private readonly INanoIdService _nanoIdService;
 
     public TinyUrlService(IDataStore urlDataStore)
 	{
         _urlDataStore = urlDataStore;
+        _nanoIdService = new NanoIdService(_urlDataStore);
         _collection = _urlDataStore.GetCollection<UrlEntity>("url");
     }
 
@@ -28,24 +29,26 @@ public class TinyUrlService: ITinyUrlService
         }
         #endregion
 
-        #region Update number of time the URL has been retreived
-        result.NumberOfClicks += 1;
+        #region Update number of times the URL has been retreived
+        result.Clicks++;
         _collection.UpdateOne(x => x.Id == result.Id, result);
         # endregion
 
-        Console.WriteLine($"Original URL: {result?.OriginalUrl}");
+        Console.WriteLine($"Original URL: {result.OriginalUrl}");
     }
 
     public void Save(string originalUrl)
     {
-        #region Check if item exists
-        var query = _collection.AsQueryable().FirstOrDefault(x => x.OriginalUrl == originalUrl);
-        if (query != null)
-            Console.WriteLine("\nUrl Already Exists");
+        #region Check if URL is valid
+        if(!Uri.IsWellFormedUriString(originalUrl, UriKind.RelativeOrAbsolute))
+        {
+            Console.WriteLine("\nCannot general Short URL from invalid URL");
+            return;
+        }
         #endregion
 
         #region Generate unique link ID an save entity
-        var urlId = Nanoid.Generate(size:9);
+        string urlId = _nanoIdService.GetNewId();
         var shortUrl = $"http://tiny.url/{urlId}";
         var entityToCreate = new UrlEntity
         {
@@ -53,6 +56,7 @@ public class TinyUrlService: ITinyUrlService
             OriginalUrl = originalUrl,
             ShortUrl = shortUrl
         };
+
         var result = _collection.InsertOne(entityToCreate);
         #endregion
 
@@ -68,7 +72,7 @@ public class TinyUrlService: ITinyUrlService
         #endregion
 
         # region Generate unique link ID an save entity
-        var urlId = Nanoid.Generate(size: 9); ;
+        var urlId = Nanoid.Generate(size: 9);
         var entityToCreate = new UrlEntity
         {
             Id = urlId,

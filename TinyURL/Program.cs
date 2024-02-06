@@ -1,6 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-using TinyURL.Services;
+﻿using TinyURL.Services;
 using JsonFlatFileDataStore;
 
 var store = new DataStore("./urlDataStore.json");
