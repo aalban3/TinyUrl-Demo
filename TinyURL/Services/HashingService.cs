@@ -3,7 +3,7 @@ using TinyURL.Interfaces;
 
 namespace TinyURL.Services;
 
-// this service's only job is to encode the DB's serial Id to ensure evcery single Short URL hash is unique
+// This service's only job is to encode the DB's serial Id to ensure every single Short URL hash is unique
 // I never decode it since all lookups are done by shortUrl for this POC.
 public class HashingService: IHashingService
 {
