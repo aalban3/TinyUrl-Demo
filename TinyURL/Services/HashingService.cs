@@ -20,5 +20,3 @@ public class HashingService: IHashingService
         return hash;
     }
 }
-
-

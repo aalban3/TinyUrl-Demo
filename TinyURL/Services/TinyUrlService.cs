@@ -1,127 +1,104 @@
-﻿using JsonFlatFileDataStore;
-using TinyURL.Interfaces;
-using TinyURL.Models;
+﻿using TinyURL.Interfaces;
 
 namespace TinyURL.Services;
 
-public class TinyUrlService: ITinyUrlService
+public class TinyUrlService
 {
-    private readonly IDataStore _urlDataStore;
-    private readonly IDocumentCollection<UrlEntity> _collection;
-    private readonly IHashingService _hashingService;
+	private readonly ICommandService _service;
 
-    public TinyUrlService(IDataStore urlDataStore)
+    public TinyUrlService(ICommandService service)
 	{
-        _urlDataStore = urlDataStore;
-        _collection = _urlDataStore.GetCollection<UrlEntity>("url");
-        _hashingService = new HashingService();
+		_service = service;
+
     }
 
-    public void Get(string shortUrl)
-    {
-        #region Fetch Item and handle null case
-        var result = _collection.AsQueryable().FirstOrDefault(x => x.ShortUrl == shortUrl);
-        if (result == null)
+	public void Run()
+	{
+        var keepOpen = true;
+
+        while (keepOpen == true)
         {
-            Console.WriteLine("\nUrl not found.");
-            return;
+            // Display Command Options
+            PrintCommandOptions();
+
+            #region Get Input from user
+            var input = Console.ReadLine();
+
+            if (string.IsNullOrEmpty(input))
+            {
+                Console.WriteLine("No input received");
+                continue;
+            }
+
+            var inputArgs = input.Split(' ');
+            var command = inputArgs[0];
+            var urlArgs = inputArgs.Length > 1 ? inputArgs.Skip(1).ToArray() : Array.Empty<string>();
+            # endregion
+
+            #region Handle command actions
+            switch (command)
+            {
+                case "create":
+                    string? newUrl;
+
+                    if (urlArgs.Length == 2)
+                        newUrl = _service.Save(urlArgs[0], urlArgs[1]);
+                    else
+                        newUrl = _service.Save(urlArgs[0]);
+
+                    if (!string.IsNullOrEmpty(newUrl))
+                        Console.WriteLine($"\nShort URL: {newUrl}");
+
+                    break;
+                case "delete":
+                    _service.Delete(urlArgs[0]);
+
+                    break;
+                case "fetch":
+                    var originalUrl = _service.Get(urlArgs[0]);
+                    if (originalUrl != null)
+                        Console.WriteLine($"\nOriginal URL: {originalUrl}");
+
+                    break;
+                case "fetch-clicks":
+                    var clicks = _service.GetClickCount(urlArgs[0]);
+
+                    if (clicks > 0)
+                        Console.WriteLine($"\nThis URL has been used {clicks} times");
+
+                    break;
+                case "exit":
+                    Console.WriteLine("\nClosing Application!");
+                    keepOpen = false;
+
+                    break;
+                case "clear":
+                    Console.Clear();
+
+                    break;
+                default:
+                    Console.WriteLine("\nInvalid Option!");
+
+                    break;
+            }
+            # endregion
+
+            Console.WriteLine("\n");
         }
-        #endregion
-
-        #region Update number of times the URL has been retreived
-        result.Clicks++;
-        _collection.UpdateOne(x => x.Id == result.Id, result);
-        # endregion
-
-        Console.WriteLine($"\nOriginal URL: {result.OriginalUrl}");
     }
 
-    public void Save(string originalUrl)
+    private static void PrintCommandOptions()
     {
-        #region Check if URL format is valid
-        if (!Uri.IsWellFormedUriString(originalUrl, UriKind.RelativeOrAbsolute))
-        {
-            Console.WriteLine("\nCannot general Short URL from invalid URL");
-            return;
-        }
-        #endregion
-
-        #region Generate unique link ID an save entity
-        var nextId = _collection.GetNextIdValue();
-        var urlHash = _hashingService.GetHash(nextId);
-        var shortUrl = $"http://aa.tinyurl/{urlHash}";
-
-        var newEntity = new UrlEntity
-        {
-            OriginalUrl = originalUrl,
-            ShortUrl = shortUrl
-        };
-
-        _collection.InsertOne(newEntity);
-        #endregion
-
-        Console.WriteLine($"\nYour URL: {shortUrl}");
+        // This is our UI.
+        Console.WriteLine("Available actions:");
+        Console.WriteLine("\tcreate <url_string>");
+        Console.WriteLine("\tcreate <url_string> <custom_url_string>");
+        Console.WriteLine("\tdelete <url_string>");
+        Console.WriteLine("\tfetch <url_string>");
+        Console.WriteLine("\tfetch-clicks <url_string>\n");
+        Console.WriteLine("Enter \"clear\" to clear screen or \"exit\" to quit.");
+        Console.Write(": ");
     }
-
-    public void Save(string originalUrl, string customUrl)
-    {
-        #region Check if URL format is valid
-        if (!Uri.IsWellFormedUriString(originalUrl, UriKind.RelativeOrAbsolute))
-        {
-            Console.WriteLine("\nCannot general Short URL from invalid URL");
-            return;
-        }
-        #endregion
-
-        # region Check if custom item exists
-        var query = _collection.AsQueryable().FirstOrDefault(x => x.ShortUrl == customUrl);
-        if (query != null)
-            Console.WriteLine("\nUrl combination already exists.");
-        #endregion
-
-        #region Generate unique link ID an save entity
-        var newEntity = new UrlEntity
-        {
-            OriginalUrl = originalUrl,
-            ShortUrl = customUrl
-        };
-
-        _collection.InsertOne(newEntity);
-        # endregion
-
-        Console.WriteLine($"\nYour URL: {customUrl}");
-    }
-
-    public void GetClickCount(string shortUrl)
-    {
-        #region Fetch Item and handle null case
-        var result = _collection.AsQueryable().FirstOrDefault(x => x.ShortUrl == shortUrl);
-        if (result == null)
-        {
-            Console.WriteLine("\nUrl not found.");
-            return;
-        }
-        #endregion
-
-        Console.WriteLine($"\nURL has been used: {result.Clicks} times");
-    }
-
-    public void Delete(string shortUrl)
-    {
-        #region Fetch Item and handle null case
-        var result = _collection.AsQueryable().FirstOrDefault(x => x.ShortUrl == shortUrl);
-        if (result == null)
-        {
-            Console.WriteLine("\nUrl not found.");
-            return;
-        }
-        #endregion
-
-        #region Handle Deletion
-        _collection.DeleteOne(x => x.ShortUrl == shortUrl);
-        #endregion
-
-        Console.WriteLine($"\nThe URL {shortUrl} has been removed.");
-    }
-
 }
+
+
