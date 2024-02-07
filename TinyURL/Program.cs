@@ -1,6 +1,7 @@
 ﻿using TinyURL.Services;
 using JsonFlatFileDataStore;
 
+// Setup Services
 var store = new DataStore("./urlDataStore.json");
 var service = new CommandService(store);
 var app = new TinyUrlService(service);

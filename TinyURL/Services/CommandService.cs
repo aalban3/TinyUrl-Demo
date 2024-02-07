@@ -10,7 +10,6 @@ public class CommandService: ICommandService
     private readonly IDataStore _urlDataStore;
     private readonly IDocumentCollection<UrlEntity> _collection;
     private readonly IHashingService _hashingService;
-
     public CommandService(IDataStore urlDataStore)
 	{
         _urlDataStore = urlDataStore;
@@ -26,7 +25,7 @@ public class CommandService: ICommandService
             var result = _collection.AsQueryable().FirstOrDefault(x => x.ShortUrl == shortUrl);
 
             if (result == null)
-                throw new ItemNotFoundException("\nUrl not found.");
+                throw new URLNotFoundException("\nUrl not found.");
             #endregion
 
             #region Update number of times the URL has been retreived
@@ -36,14 +35,14 @@ public class CommandService: ICommandService
 
             return result.OriginalUrl;
         }
-        catch(ItemNotFoundException ex)
+        catch(URLNotFoundException ex)
         {
             Console.WriteLine(ex.Message);
             return null;
         }
         catch(Exception ex)
         {
-            Console.WriteLine($"\n{ex.Message}");
+            Console.WriteLine(ex.Message);
             return null;
         }
     }
@@ -121,11 +120,11 @@ public class CommandService: ICommandService
             var result = _collection.AsQueryable().FirstOrDefault(x => x.ShortUrl == shortUrl);
 
             if (result == null)
-                throw new ItemNotFoundException("\nUrl not found");
+                throw new URLNotFoundException("\nUrl not found");
 
             return result.Clicks;
         }
-        catch(ItemNotFoundException ex)
+        catch(URLNotFoundException ex)
         {
             Console.WriteLine(ex.Message);
             return 0;
@@ -141,16 +140,14 @@ public class CommandService: ICommandService
     {
         try
         {
-            #region Handle Deletion
             var didDelete = _collection.DeleteOne(x => x.ShortUrl == shortUrl);
-            #endregion
 
             if (!didDelete)
-                throw new ItemNotFoundException("\n Could not found item to delete");
+                throw new URLNotFoundException("\n Could not found URL to delete");
 
-            Console.WriteLine($"\nSuccessfully Deleted URL: {shortUrl}");
+            Console.WriteLine($"\nDeleted URL: {shortUrl}");
         }
-        catch(ItemNotFoundException ex)
+        catch(URLNotFoundException ex)
         {
             Console.WriteLine(ex.Message);
         }
