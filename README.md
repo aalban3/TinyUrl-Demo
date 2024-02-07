@@ -4,6 +4,6 @@ This demo is intended to show an implementation of a URL Shortener service. It i
 
 
 Package References:
-* JSOn Data Stoee package: https://github.com/ttu/json-flatfile-datastore
+* Json Data Store package: https://github.com/ttu/json-flatfile-datastore
 * SqId: https://sqids.org/dotnet
 * NSubstitute: https://nsubstitute.github.io/
