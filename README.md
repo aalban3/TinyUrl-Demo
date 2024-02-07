@@ -8,7 +8,7 @@ This is a .NET 8 Console Application. It can be run from visual studio for mac o
 
 1. Open Adroit-Demo.sln in Visual Studio
 2. Click Start to run the program in your command line.
-3. You will see a prompt like this
+3. You will see a prompt like this:
 
   ![alt text](image.png)
 
