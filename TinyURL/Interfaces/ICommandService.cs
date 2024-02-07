@@ -2,9 +2,9 @@
 
 public interface ICommandService
 {
-    string? Get(string shortUrl);
-    string? Save(string originalUrl);
-    string? Save(string originalUrl, string customUrl);
-    long? GetClickCount(string shortUrl);
-    void Delete(string shortUrl);
+    string? Get(Uri shortUrl);
+    string? Save(Uri originalUrl);
+    string? Save(Uri originalUrl, Uri customUrl);
+    long? GetClickCount(Uri shortUrl);
+    void Delete(Uri shortUrl);
 }

@@ -1,10 +1,10 @@
 ﻿namespace TinyURL.Exceptions;
 
-public class URLNotFoundException : Exception
+public class UrlNotFoundException : Exception
 {
-	public URLNotFoundException(): base() { }
+	public UrlNotFoundException(): base() { }
 
-    public URLNotFoundException(string message) : base(message) { }
+    public UrlNotFoundException(string message) : base(message) { }
 }
 
 

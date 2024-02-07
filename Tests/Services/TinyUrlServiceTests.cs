@@ -54,7 +54,7 @@ public class TinyUrlServiceTests
         var consoleText = new StringWriter();
         Console.SetOut(consoleText);
         _mockCommandLineHelper.GetInput().Returns("create http://www.test.io");
-        _mockCommandService.Save("http://www.test.io").Returns("https://tiny.url/123abc");
+        _mockCommandService.Save(new Uri("http://www.test.io")).Returns("https://tiny.url/123abc");
 
         // Act
         _tinyURLService.Run();
@@ -70,7 +70,7 @@ public class TinyUrlServiceTests
         var consoleText = new StringWriter();
         Console.SetOut(consoleText);
         _mockCommandLineHelper.GetInput().Returns("fetch https://tiny.url/123abc");
-        _mockCommandService.Get("https://tiny.url/123abc").Returns("https://alan-alban.com");
+        _mockCommandService.Get(new Uri("https://tiny.url/123abc")).Returns("https://alan-alban.com");
 
         // Act
         _tinyURLService.Run();
@@ -91,7 +91,7 @@ public class TinyUrlServiceTests
         _tinyURLService.Run();
 
         // Assert
-        _mockCommandService.Received(1).Delete("https://tiny.url/123abc");
+        _mockCommandService.Received(1).Delete(new Uri("https://tiny.url/123abc"));
     }
 
     [Fact]
@@ -101,7 +101,7 @@ public class TinyUrlServiceTests
         var consoleText = new StringWriter();
         Console.SetOut(consoleText);
         _mockCommandLineHelper.GetInput().Returns("fetch-clicks https://tiny.url/123abc");
-        _mockCommandService.GetClickCount("https://tiny.url/123abc").Returns(5);
+        _mockCommandService.GetClickCount(new Uri("https://tiny.url/123abc")).Returns(5);
 
         // Act
         _tinyURLService.Run();

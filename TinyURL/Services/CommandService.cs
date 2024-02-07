@@ -10,14 +10,14 @@ public class CommandService: ICommandService
     private readonly IDataStore _urlDataStore;
     private readonly IDocumentCollection<UrlEntity> _collection;
     private readonly IHashingService _hashingService;
-    public CommandService(IDataStore urlDataStore)
+    public CommandService(IDataStore urlDataStore, IHashingService hashingService)
 	{
         _urlDataStore = urlDataStore;
         _collection = _urlDataStore.GetCollection<UrlEntity>("url");
-        _hashingService = new HashingService();
+        _hashingService = hashingService;
     }
 
-    public string? Get(string shortUrl)
+    public string? Get(Uri? shortUrl)
     {
         try
         {
@@ -25,7 +25,7 @@ public class CommandService: ICommandService
             var result = _collection.AsQueryable().FirstOrDefault(x => x.ShortUrl == shortUrl);
 
             if (result == null)
-                throw new URLNotFoundException("\nUrl not found.");
+                throw new UrlNotFoundException("\nUrl not found.");
             #endregion
 
             #region Update number of times the URL has been retreived
@@ -33,12 +33,7 @@ public class CommandService: ICommandService
             _collection.UpdateOne(x => x.Id == result.Id, result);
             #endregion
 
-            return result.OriginalUrl;
-        }
-        catch(URLNotFoundException ex)
-        {
-            Console.WriteLine(ex.Message);
-            return null;
+            return result?.OriginalUrl?.ToString();
         }
         catch(Exception ex)
         {
@@ -47,19 +42,14 @@ public class CommandService: ICommandService
         }
     }
 
-    public string? Save(string originalUrl)
+    public string? Save(Uri? originalUrl)
     {
         try
         {
-            #region Check if URL format is valid
-            if (!Uri.IsWellFormedUriString(originalUrl, UriKind.Absolute))
-                throw new Exception("\nCannot generate Short URL from invalid URL");
-            #endregion
-
             #region Generate unique link ID an save entity
             var nextId = _collection.GetNextIdValue();
             var urlHash = _hashingService.GetHash(nextId);
-            var shortUrl = $"http://aa.tinyurl/{urlHash}";
+            var shortUrl = new Uri($"http://aa.tinyurl/{urlHash}");
 
             var newEntity = new UrlEntity
             {
@@ -70,7 +60,7 @@ public class CommandService: ICommandService
             _collection.InsertOne(newEntity);
             #endregion
 
-            return shortUrl;
+            return shortUrl.ToString();
         }
         catch (Exception ex)
         {
@@ -79,15 +69,10 @@ public class CommandService: ICommandService
         }
     }
 
-    public string? Save(string originalUrl, string customUrl)
+    public string? Save(Uri? originalUrl, Uri? customUrl)
     {
         try
         {
-            #region Check if URL format is valid
-            if (!Uri.IsWellFormedUriString(originalUrl, UriKind.Absolute))
-                throw new Exception("\nCannot general Short URL from invalid URL");
-            #endregion
-
             #region Check if custom item exists
             var query = _collection.AsQueryable().FirstOrDefault(x => x.ShortUrl == customUrl);
             if (query != null)
@@ -104,7 +89,7 @@ public class CommandService: ICommandService
             _collection.InsertOne(newEntity);
             #endregion
 
-            return customUrl;
+            return customUrl?.ToString();
         }
         catch(Exception ex)
         {
@@ -113,21 +98,16 @@ public class CommandService: ICommandService
         }
     }
 
-    public long? GetClickCount(string shortUrl)
+    public long? GetClickCount(Uri? shortUrl)
     {
         try
         {
             var result = _collection.AsQueryable().FirstOrDefault(x => x.ShortUrl == shortUrl);
 
             if (result == null)
-                throw new URLNotFoundException("\nUrl not found");
+                throw new UrlNotFoundException("\nUrl not found");
 
             return result.Clicks;
-        }
-        catch(URLNotFoundException ex)
-        {
-            Console.WriteLine(ex.Message);
-            return 0;
         }
         catch(Exception ex)
         {
@@ -136,20 +116,16 @@ public class CommandService: ICommandService
         }
     }
 
-    public void Delete(string shortUrl)
+    public void Delete(Uri? shortUrl)
     {
         try
         {
             var didDelete = _collection.DeleteOne(x => x.ShortUrl == shortUrl);
 
             if (!didDelete)
-                throw new URLNotFoundException("\n Could not found URL to delete");
+                throw new UrlNotFoundException("\n Could not found URL to delete");
 
             Console.WriteLine($"\nDeleted URL: {shortUrl}");
-        }
-        catch(URLNotFoundException ex)
-        {
-            Console.WriteLine(ex.Message);
         }
         catch(Exception ex)
         {

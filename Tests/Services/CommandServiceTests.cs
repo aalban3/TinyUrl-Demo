@@ -10,22 +10,24 @@ public class CommandServiceTests
     private readonly ICommandService _commandService;
     private readonly IDataStore _urlDataStore;
     private readonly IDocumentCollection<UrlEntity> _collection;
+    private readonly IHashingService _hashingService;
 
     public CommandServiceTests()
     {
         _urlDataStore = new DataStore("../testDataStore.json");
         _collection = _urlDataStore.GetCollection<UrlEntity>("url");
-        _commandService = new CommandService(_urlDataStore);
+        _hashingService = new HashingService();
+        _commandService = new CommandService(_urlDataStore, _hashingService);
     }
 
     [Fact]
     public void Get_Success()
     {
         // Arrange
-        var testShortUrl = "https://tiny.test/12345";
+        var testShortUrl = new Uri("https://tiny.test/12345");
         var testEntity = new UrlEntity
         {
-            OriginalUrl = "https://test-url.com",
+            OriginalUrl = new Uri("https://test-url.com"),
             ShortUrl = testShortUrl
         };
         _collection.InsertOne(testEntity);
@@ -34,7 +36,7 @@ public class CommandServiceTests
         var result = _commandService.Get(testShortUrl);
 
         // Assert
-        Assert.Equal(testEntity.OriginalUrl, result);
+        Assert.Equal(testEntity.OriginalUrl.ToString(), result);
 
         // Cleanup
         _collection.DeleteOne(x => x.ShortUrl == testShortUrl);
@@ -44,10 +46,10 @@ public class CommandServiceTests
     public void Get_Failure_UrlNotFound()
     {
         // Arrange
-        var testShortUrl = "https://tiny.test/12345";
+        var testShortUrl = new Uri("https://tiny.test/12345");
         var testEntity = new UrlEntity
         {
-            OriginalUrl = "https://test-url.com",
+            OriginalUrl = new Uri("https://test-url.com"),
             ShortUrl = testShortUrl
         };
         _collection.InsertOne(testEntity);
@@ -56,7 +58,7 @@ public class CommandServiceTests
         Console.SetOut(consoleText);
 
         // Act
-        var result = _commandService.Get("https://tiny.fake.test/12345658999");
+        var result = _commandService.Get(new Uri("https://tiny.fake.test/12345658999"));
 
         // Assert
         Assert.Null(result);
@@ -70,7 +72,7 @@ public class CommandServiceTests
     public void Save_Success()
     {
         // Arrange
-        var originalUrl = "https://alan-alban.com";
+        var originalUrl = new Uri("https://alan-alban.com");
 
         // Act
         var result = _commandService.Save(originalUrl);
@@ -80,15 +82,15 @@ public class CommandServiceTests
         Assert.Equal(1, _collection.Count);
 
         // Cleanup
-        _collection.DeleteOne(x => x.ShortUrl == result);
+        _collection.DeleteOne(x => x.ShortUrl == new Uri(result));
     }
 
     [Fact]
     public void Save_Success_CustomUrl()
     {
         // Arrange
-        var originalUrl = "https://alan-alban.com";
-        var customUrl = "https://alan.ly/ab5iii";
+        var originalUrl = new Uri("https://alan-alban.com");
+        var customUrl = new Uri("https://alan.ly/ab5iii");
 
         // Act
         var result = _commandService.Save(originalUrl, customUrl);
@@ -105,27 +107,31 @@ public class CommandServiceTests
     public void Save_Failure_InvalidURLFormatting()
     {
         // Arrange
-        var originalUrl = "httpsalan-albancom";
         var consoleText = new StringWriter();
         Console.SetOut(consoleText);
 
         // Act
-        var result = _commandService.Save(originalUrl);
+        try
+        {
+            _commandService.Save(new Uri("httpsalan-albancom"));
+        }
+        catch (Exception)
+        {
+            return;
+        }
 
         // Assert
-        Assert.Null(result);
-        Assert.Equal("\nCannot generate Short URL from invalid URL\n", consoleText.ToString());
-        Assert.Equal(0, _collection.Count);
+        Assert.Fail("Call should fail with a malformed URI");
     }
 
     [Fact]
     public void GetClickCount_ReturnsNumberOfClicks()
     {
         // Arrange
-        var testShortUrl = "https://tiny.test/12345";
+        var testShortUrl = new Uri("https://tiny.test/12345");
         var testEntity = new UrlEntity
         {
-            OriginalUrl = "https://test-url.com",
+            OriginalUrl = new Uri("https://test-url.com"),
             ShortUrl = testShortUrl
         };
         _collection.InsertOne(testEntity);
@@ -148,7 +154,7 @@ public class CommandServiceTests
     public void GetClickCount_UrlNotFound()
     {
         // Arrange
-        var badUrl = "https://bad.url.test/12345";
+        var badUrl = new Uri("https://bad.url.test/12345");
         var consoleText = new StringWriter();
         Console.SetOut(consoleText);
 
@@ -164,10 +170,10 @@ public class CommandServiceTests
     public void Delete_SuccessfulDeletion()
     {
         // Arrange
-        var testShortUrl = "https://tiny.test/12345";
+        var testShortUrl = new Uri("https://tiny.test/12345");
         var testEntity = new UrlEntity
         {
-            OriginalUrl = "https://test-url.com",
+            OriginalUrl = new Uri("https://test-url.com"),
             ShortUrl = testShortUrl
         };
         _collection.InsertOne(testEntity);
@@ -186,10 +192,10 @@ public class CommandServiceTests
     public void Delete_FailedDeletion()
     {
         // Arrange
-        var testShortUrl = "https://tiny.test/12345";
+        var testShortUrl = new Uri("https://tiny.test/12345");
         var testEntity = new UrlEntity
         {
-            OriginalUrl = "https://test-url.com",
+            OriginalUrl = new Uri("https://test-url.com"),
             ShortUrl = testShortUrl
         };
         _collection.InsertOne(testEntity);
@@ -198,7 +204,7 @@ public class CommandServiceTests
         Console.SetOut(consoleText);
 
         // Act
-        _commandService.Delete("https://alan.test/111iii");
+        _commandService.Delete(new Uri("https://alan.test/111iii"));
 
         // Assert
         Assert.Equal("\n Could not found URL to delete\n", consoleText.ToString());

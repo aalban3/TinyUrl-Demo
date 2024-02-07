@@ -17,69 +17,76 @@ public class TinyUrlService
 
 	public void Run()
 	{
-        #region Get Input from user
-        var input = _commandLineHelper.GetInput();
-
-        if (string.IsNullOrEmpty(input))
+        try
         {
-            Console.WriteLine("\nNo input received");
-            return;
+            #region Get Input from user
+            var input = _commandLineHelper.GetInput();
+
+            if (string.IsNullOrEmpty(input))
+            {
+                Console.WriteLine("\nNo input received");
+                return;
+            }
+
+            var inputArgs = input.Split(' ');
+            var command = inputArgs[0];
+            var urlArgs = inputArgs.Length > 1 ? inputArgs.Skip(1).ToArray() : Array.Empty<string>();
+            #endregion
+
+            #region Handle command actions
+            switch (command)
+            {
+                case "create":
+                    string? newUrl;
+
+                    if (urlArgs.Length == 2)
+                        newUrl = _service.Save(new Uri(urlArgs[0]), new Uri(urlArgs[1]));
+                    else
+                        newUrl = _service.Save(new Uri(urlArgs[0]));
+
+                    if (!string.IsNullOrEmpty(newUrl))
+                        Console.WriteLine($"\nShort URL: {newUrl}");
+
+                    break;
+                case "delete":
+                    _service.Delete(new Uri(urlArgs[0]));
+
+                    break;
+                case "fetch":
+                    var originalUrl = _service.Get(new Uri(urlArgs[0]));
+                    if (originalUrl != null)
+                        Console.WriteLine($"\nOriginal URL: {originalUrl}");
+
+                    break;
+                case "fetch-clicks":
+                    var clicks = _service.GetClickCount(new Uri(urlArgs[0]));
+
+                    if (clicks > 0)
+                        Console.WriteLine($"\nThis URL has been used {clicks} times");
+
+                    break;
+                case "exit":
+                    Console.WriteLine("\nClosing Application!");
+                    _shouldContinue = false;
+
+                    break;
+                case "clear":
+                    Console.Clear();
+
+                    break;
+                default:
+                    Console.WriteLine("\nInvalid Option!");
+
+                    break;
+            }
+            #endregion
+
+            Console.WriteLine("\n");
         }
-
-        var inputArgs = input.Split(' ');
-        var command = inputArgs[0];
-        var urlArgs = inputArgs.Length > 1 ? inputArgs.Skip(1).ToArray() : Array.Empty<string>();
-        #endregion
-
-        #region Handle command actions
-        switch (command)
+        catch(Exception ex)
         {
-            case "create":
-                string? newUrl;
-
-                if (urlArgs.Length == 2)
-                    newUrl = _service.Save(urlArgs[0], urlArgs[1]);
-                else
-                    newUrl = _service.Save(urlArgs[0]);
-
-                if (!string.IsNullOrEmpty(newUrl))
-                    Console.WriteLine($"\nShort URL: {newUrl}");
-
-                break;
-            case "delete":
-                _service.Delete(urlArgs[0]);
-
-                break;
-            case "fetch":
-                var originalUrl = _service.Get(urlArgs[0]);
-                if (originalUrl != null)
-                    Console.WriteLine($"\nOriginal URL: {originalUrl}");
-
-                break;
-            case "fetch-clicks":
-                var clicks = _service.GetClickCount(urlArgs[0]);
-
-                if (clicks > 0)
-                    Console.WriteLine($"\nThis URL has been used {clicks} times");
-
-                break;
-            case "exit":
-                Console.WriteLine("\nClosing Application!");
-                _shouldContinue = false;
-
-                break;
-            case "clear":
-                Console.Clear();
-
-                break;
-            default:
-                Console.WriteLine("\nInvalid Option!");
-
-                break;
+            Console.WriteLine(ex.Message);
         }
-        #endregion
-
-        Console.WriteLine("\n");
     }
 
     public static void PrintCommandOptions()
