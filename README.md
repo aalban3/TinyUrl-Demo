@@ -12,8 +12,8 @@ This is a .NET 8 Console Application. It can be run from visual studio for mac o
 
   ![alt text](image.png)
 
-4. Enter any of the available commands followed by a URL, for example `fetch https://tiny.url/123`
-5. A response will show below with one of the following outcomes
+4. Enter any of the available commands followed by a URL, for example: `fetch https://tiny.url/123`
+5. A response will show below with one of the following outcomes:
     * Invalid Input
     * A successful URL value
     * A successful number of clicks
@@ -23,15 +23,15 @@ This is a .NET 8 Console Application. It can be run from visual studio for mac o
 
 ### Unit Testing
 ---
-Unit tests are available for the three major services the app uses. It covers data store functionality, command line promp responses and error handling.
+Unit tests are available for the three major services the app uses. It covers data store functionality, command line prompt responses and error handling.
 
 ### Potential Improvements
 ---
-1. I believe there may be better ways of configuring my dependency injection in dotnet, similar to how it's done in web apps. However, I haven't really done it in Console applications before and couldn't find a suitable solution.
+1. I believe there may be better ways of configuring my dependency injection in dotnet, similar to how it's done in web apps. However, I haven't really done it in console applications before and couldn't find a suitable solution.
 
-2. Even though this project does not require a persistence layer, I believe using an in-memory database might work nicely for a demo like this. There are ways of using Entity Framework exclusively for testing, which really tests entity reliability. I still like the Json FlatFile Data Store because it makes it easy to get going, but I had to manually clear my tests to keep the file small. 
+2. Even though this project does not require a persistence layer, I believe that using an in-memory database would work nicely for a demo like this. There are ways of using Entity Framework exclusively for testing, which really tests entity reliability. I still like the Json FlatFile Data Store because it makes it easy to get going, but I had to manually clear my tests to keep the file small. 
 
-3. I tried using the logging extension (ILogger) but was not too satisfied with the way it looked in the command line. I think if I could figure out a better way of logging info/errors without it looking so convoluted, I would consider adding that.
+3. I tried using the logging extension (ILogger) but was not too satisfied with the way it looked on the command line. I think if I could figure out a better way of logging info/errors without it looking so convoluted, I would consider adding that.
 
 Package References:
 * Json Flat File Data Store package: https://github.com/ttu/json-flatfile-datastore
